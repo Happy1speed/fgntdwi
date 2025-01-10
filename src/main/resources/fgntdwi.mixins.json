@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "net.happyspeed.fgntdwi.mixin",
+	"compatibilityLevel": "JAVA_17",
+	"mixins": [
+		"ApplyBonusLootFunctionMixin",
+		"LootingEnchantLootFunctionMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
