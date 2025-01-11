@@ -14,7 +14,5 @@ public class FortuneStatMod implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("fgntdwi!");
 		ModConfigs.registerConfigs();
-
-		//Todo Mod Icon and Fabric.mod github info
 	}
 }
