@@ -13,6 +13,8 @@ import net.minecraft.loot.function.ConditionalLootFunction;
 import net.minecraft.loot.function.LootingEnchantLootFunction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = ApplyBonusLootFunction.class, priority = 502)
 abstract class ApplyBonusLootFunctionMixin extends ConditionalLootFunction {
@@ -23,9 +25,35 @@ abstract class ApplyBonusLootFunctionMixin extends ConditionalLootFunction {
 
     @ModifyExpressionValue(method = "process", at = @At(value = "INVOKE", target = "Lnet/minecraft/enchantment/EnchantmentHelper;getLevel(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/item/ItemStack;)I"))
     public int playerFortuneLootMultiplier(int original, @Local(ordinal = 0, argsOnly = true) LootContext context) {
-        if (context.get(LootContextParameters.THIS_ENTITY) instanceof PlayerEntity player) {
-            return original + Math.round(Math.min(player.experienceLevel * (float) ModConfigs.BLOCKSLEVELFACTOR, ModConfigs.BLOCKSMAXLEVELCAP));
+        if (!ModConfigs.DIRECTBONUS) {
+            if (context.get(LootContextParameters.THIS_ENTITY) instanceof PlayerEntity player) {
+                int result = 0;
+                if (ModConfigs.USEXPSTAT) {
+                    result += Math.round(Math.min(player.experienceLevel * (float) ModConfigs.BLOCKSLEVELFACTOR, ModConfigs.BLOCKSMAXLEVELCAP));
+                }
+                if (ModConfigs.USELUCKSTAT) {
+                    result += (Math.round(player.getLuck() * (float) ModConfigs.LUCKSTATMULTIPLIER));
+                }
+                return original + result;
+            }
+            return original;
         }
         return original;
+    }
+
+    @Inject(method = "process", at = @At(value = "RETURN"), cancellable = true)
+    public void playerFortuneMultiplierStraight(ItemStack stack, LootContext context, CallbackInfoReturnable<ItemStack> cir) {
+        if (ModConfigs.DIRECTBONUS) {
+            if (context.get(LootContextParameters.THIS_ENTITY) instanceof PlayerEntity player) {
+                int result = 0;
+                if (ModConfigs.USEXPSTAT) {
+                    result += Math.round(Math.min(player.experienceLevel * (float) ModConfigs.BLOCKSLEVELFACTOR, ModConfigs.BLOCKSMAXLEVELCAP));
+                }
+                if (ModConfigs.USELUCKSTAT) {
+                    result += (Math.round(player.getLuck() * (float) ModConfigs.LUCKSTATMULTIPLIER));
+                }
+                stack.increment(result);
+            }
+        }
     }
 }
